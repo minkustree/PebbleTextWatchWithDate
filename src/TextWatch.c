@@ -1,7 +1,7 @@
 #include "pebble_os.h"
 #include "pebble_app.h"
 #include "pebble_fonts.h"
-
+#include <ctype.h>
 #include "num2words-en.h"
 
 #define DEBUG 0
@@ -32,6 +32,7 @@ Line line1;
 Line line2;
 Line line3;
 TextLayer date;
+TextLayer day;
 
 PblTm t;
 
@@ -45,9 +46,13 @@ static bool textInitialized = false;
 void setDate(PblTm *tm)
 {
 	static char dateString[] = "september 99, 9999";
+	static char dayString[] = "wednesday";
 	string_format_time(dateString, sizeof(dateString), "%B %e, %Y", tm);
-	dateString[0] = tolower(dateString[0]);
+	string_format_time(dayString, sizeof(dayString), "%A", tm);
+	dateString[0] = tolower((int)dateString[0]);
+	dayString[0] = tolower((int)dayString[0]);
 	text_layer_set_text(&date, dateString);
+	text_layer_set_text(&day, dayString);
 }
 
 // Animation handler
@@ -247,12 +252,17 @@ void handle_init(AppContextRef ctx) {
 	configureLightLayer(&line3.currentLayer);
 	configureLightLayer(&line3.nextLayer);
 	
-	//date layer
-	text_layer_init(&date, GRect(0, 140, 144, 168-140));
-    	text_layer_set_text_color(&date, GColorWhite);
-    	text_layer_set_background_color(&date, GColorClear);
-    	text_layer_set_font(&date, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    	text_layer_set_text_alignment(&date, GTextAlignmentRight);
+	//date & day layers
+	text_layer_init(&date, GRect(0, 150, 144, 168-150));
+    text_layer_set_text_color(&date, GColorWhite);
+    text_layer_set_background_color(&date, GColorClear);
+    text_layer_set_font(&date, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text_alignment(&date, GTextAlignmentRight);
+	text_layer_init(&day, GRect(0, 135, 144, 168-135));
+    text_layer_set_text_color(&day, GColorWhite);
+    text_layer_set_background_color(&day, GColorClear);
+    text_layer_set_font(&day, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+    text_layer_set_text_alignment(&day, GTextAlignmentRight);
 
 	// Configure time on init
 	get_time(&t);
@@ -266,6 +276,7 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &line3.currentLayer.layer);
 	layer_add_child(&window.layer, &line3.nextLayer.layer);
 	layer_add_child(&window.layer, &date.layer);
+	layer_add_child(&window.layer, &day.layer);
 	
 #if DEBUG
 	// Button functionality
@@ -278,6 +289,9 @@ void handle_minute_tick(AppContextRef ctx, PebbleTickEvent *t) {
   (void)ctx;
 
   display_time(t->tick_time);
+  if (t->units_changed & DAY_UNIT) {
+    setDate(t->tick_time);
+  }
 }
 
 void pbl_main(void *params) {
