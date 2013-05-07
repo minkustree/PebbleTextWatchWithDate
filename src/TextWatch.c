@@ -31,6 +31,7 @@ typedef struct {
 Line line1;
 Line line2;
 Line line3;
+TextLayer date;
 
 PblTm t;
 
@@ -140,6 +141,7 @@ void display_initial_time(PblTm *t)
 	text_layer_set_text(&line1.currentLayer, line1Str[0]);
 	text_layer_set_text(&line2.currentLayer, line2Str[0]);
 	text_layer_set_text(&line3.currentLayer, line3Str[0]);
+	setDate();
 }
 
 
@@ -159,6 +161,14 @@ void configureLightLayer(TextLayer *textlayer)
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
 	text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
+}
+
+void setDate(PblTm *tm)
+{
+	static char dateString[] = "september 99, 9999";
+	string_format_time(date, sizeof(date), "%B %e, %Y", tm);
+	date[0] = tolower(date[0]);
+	text_layer_set_text(&date, dateString);
 }
 
 
@@ -236,6 +246,13 @@ void handle_init(AppContextRef ctx) {
 	text_layer_init(&line3.nextLayer, GRect(144, 92, 144, 50));
 	configureLightLayer(&line3.currentLayer);
 	configureLightLayer(&line3.nextLayer);
+	
+	//date layer
+	text_layer_init(&date, GRect(0, 140, 144, 168-140));
+    	text_layer_set_text_color(&date, GColorWhite);
+    	text_layer_set_background_color(&date, GColorClear);
+    	text_layer_set_font(&date, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    	text_layer_set_text_alignment(&date, GTextAlignmentRight);
 
 	// Configure time on init
 	get_time(&t);
@@ -248,6 +265,7 @@ void handle_init(AppContextRef ctx) {
 	layer_add_child(&window.layer, &line2.nextLayer.layer);
 	layer_add_child(&window.layer, &line3.currentLayer.layer);
 	layer_add_child(&window.layer, &line3.nextLayer.layer);
+	layer_add_child(&window.layer, &date.layer);
 	
 #if DEBUG
 	// Button functionality
