@@ -1,6 +1,21 @@
 #include "num2words-en.h"
 #include "string.h"
 
+static const char* const MONTHS[] = {
+  "january,
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december"
+};
+
 static const char* const ONES[] = {
   "o'clock",
   "one",
