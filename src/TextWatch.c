@@ -41,6 +41,15 @@ static char line3Str[2][BUFFER_SIZE];
 
 static bool textInitialized = false;
 
+//Handle Date
+void setDate(PblTm *tm)
+{
+	static char dateString[] = "september 99, 9999";
+	string_format_time(dateString, sizeof(dateString), "%B %e, %Y", tm);
+	dateString[0] = tolower(dateString[0]);
+	text_layer_set_text(&date, dateString);
+}
+
 // Animation handler
 void animationStoppedHandler(struct Animation *animation, bool finished, void *context)
 {
@@ -141,7 +150,7 @@ void display_initial_time(PblTm *t)
 	text_layer_set_text(&line1.currentLayer, line1Str[0]);
 	text_layer_set_text(&line2.currentLayer, line2Str[0]);
 	text_layer_set_text(&line3.currentLayer, line3Str[0]);
-	setDate();
+	setDate(t);
 }
 
 
@@ -162,15 +171,6 @@ void configureLightLayer(TextLayer *textlayer)
 	text_layer_set_background_color(textlayer, GColorClear);
 	text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
 }
-
-void setDate(PblTm *tm)
-{
-	static char dateString[] = "september 99, 9999";
-	string_format_time(date, sizeof(date), "%B %e, %Y", tm);
-	date[0] = tolower(date[0]);
-	text_layer_set_text(&date, dateString);
-}
-
 
 /** 
  * Debug methods. For quickly debugging enable debug macro on top to transform the watchface into
