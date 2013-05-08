@@ -45,9 +45,27 @@ static bool textInitialized = false;
 //Handle Date
 void setDate(PblTm *tm)
 {
-	static char dateString[] = "september 99, 9999";
+	static char dateString[] = "september 99th, 9999";
 	static char dayString[] = "wednesday";
-	string_format_time(dateString, sizeof(dateString), "%B %e, %Y", tm);
+	switch(tm->tm_min)
+	{
+		case 1 :
+		case 21 :
+		case 31 :
+			string_format_time(dateString, sizeof(dateString), "%B %est, %Y", tm);
+			break;
+		case 2 :
+		case 22 :
+			string_format_time(dateString, sizeof(dateString), "%B %end, %Y", tm);
+			break;
+		case 3 :
+		case 23 :
+			string_format_time(dateString, sizeof(dateString), "%B %erd, %Y", tm);
+			break;
+		default :
+			string_format_time(dateString, sizeof(dateString), "%B %eth, %Y", tm);
+			break;
+	}
 	string_format_time(dayString, sizeof(dayString), "%A", tm);
 	dateString[0] = tolower((int)dateString[0]);
 	dayString[0] = tolower((int)dayString[0]);
@@ -235,20 +253,20 @@ void handle_init(AppContextRef ctx) {
 	resource_init_current_app(&APP_RESOURCES);
 	
 	// 1st line layers
-	text_layer_init(&line1.currentLayer, GRect(0, 18, 144, 50));
-	text_layer_init(&line1.nextLayer, GRect(144, 18, 144, 50));
+	text_layer_init(&line1.currentLayer, GRect(0, 10, 144, 50));
+	text_layer_init(&line1.nextLayer, GRect(144, 10, 144, 50));
 	configureBoldLayer(&line1.currentLayer);
 	configureBoldLayer(&line1.nextLayer);
 
 	// 2nd layers
-	text_layer_init(&line2.currentLayer, GRect(0, 55, 144, 50));
-	text_layer_init(&line2.nextLayer, GRect(144, 55, 144, 50));
+	text_layer_init(&line2.currentLayer, GRect(0, 47, 144, 50));
+	text_layer_init(&line2.nextLayer, GRect(144, 47, 144, 50));
 	configureLightLayer(&line2.currentLayer);
 	configureLightLayer(&line2.nextLayer);
 
 	// 3rd layers
-	text_layer_init(&line3.currentLayer, GRect(0, 92, 144, 50));
-	text_layer_init(&line3.nextLayer, GRect(144, 92, 144, 50));
+	text_layer_init(&line3.currentLayer, GRect(0, 84, 144, 50));
+	text_layer_init(&line3.nextLayer, GRect(144, 84, 144, 50));
 	configureLightLayer(&line3.currentLayer);
 	configureLightLayer(&line3.nextLayer);
 	
