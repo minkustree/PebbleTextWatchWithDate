@@ -47,7 +47,7 @@ void setDate(PblTm *tm)
 {
 	static char dateString[] = "september 99th, 9999";
 	static char dayString[] = "wednesday";
-	switch(tm->tm_min)
+	switch(tm->tm_mday)
 	{
 		case 1 :
 		case 21 :
