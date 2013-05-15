@@ -114,7 +114,7 @@ void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line
 	}
 	
 	// Truncate long teen values
-	if (strlen(line2) > 7) {
+	if (strlen(line2) > 7 && minutes != 13) {
 		char *pch = strstr(line2, "teen");
 		if (pch) {
 			memcpy(line3, pch, 4);
