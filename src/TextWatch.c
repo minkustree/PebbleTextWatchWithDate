@@ -1,49 +1,44 @@
-#include "pebble_os.h"
-#include "pebble_app.h"
-#include "pebble_fonts.h"
+#include <Pebble.h>
 #include <ctype.h>
 #include "num2words-en.h"
 
 #define DEBUG 0
 #define BUFFER_SIZE 44
 
-#define MY_UUID { 0x4A, 0x6E, 0x04, 0xAD, 0x13, 0x2A, 0x48, 0xAB, 0xB1, 0x65, 0x7F, 0xF4, 0xA9, 0x98, 0x72, 0xD3 }
-PBL_APP_INFO(MY_UUID,
-             "Text Watch With Date", "Saracco",
-             1, 0,
-             RESOURCE_ID_IMAGE_MENU_ICON,
-#if DEBUG
-             APP_INFO_STANDARD_APP
-#else
-			 APP_INFO_WATCH_FACE
-#endif
-);
-
-Window window;
+Window *window;
 
 typedef struct {
-	TextLayer currentLayer;
-	TextLayer nextLayer;	
-	PropertyAnimation currentAnimation;
-	PropertyAnimation nextAnimation;
+	TextLayer *currentLayer;
+	TextLayer *nextLayer;	
+	PropertyAnimation *currentAnimation;
+	PropertyAnimation *nextAnimation;
 } Line;
 
 Line line1;
 Line line2;
 Line line3;
-TextLayer date;
-TextLayer day;
-
-PblTm t;
+TextLayer *date;
+TextLayer *day;
 
 static char line1Str[2][BUFFER_SIZE];
 static char line2Str[2][BUFFER_SIZE];
 static char line3Str[2][BUFFER_SIZE];
 
-static bool textInitialized = false;
+static void destroy_property_animation(PropertyAnimation **prop_animation) {
+  if (*prop_animation == NULL) {
+    return;
+  }
+
+  if (animation_is_scheduled((Animation*) *prop_animation)) {
+    animation_unschedule((Animation*) *prop_animation);
+  }
+
+  property_animation_destroy(*prop_animation);
+  *prop_animation = NULL;
+}
 
 //Handle Date
-void setDate(PblTm *tm)
+void setDate(struct tm *tm)
 {
 	static char dateString[] = "september 99th, 9999";
 	static char dayString[] = "wednesday";
@@ -52,59 +47,63 @@ void setDate(PblTm *tm)
 		case 1 :
 		case 21 :
 		case 31 :
-			string_format_time(dateString, sizeof(dateString), "%B %est, %Y", tm);
+			strftime(dateString, sizeof(dateString), "%B %est, %Y", tm);
 			break;
 		case 2 :
 		case 22 :
-			string_format_time(dateString, sizeof(dateString), "%B %end, %Y", tm);
+			strftime(dateString, sizeof(dateString), "%B %end, %Y", tm);
 			break;
 		case 3 :
 		case 23 :
-			string_format_time(dateString, sizeof(dateString), "%B %erd, %Y", tm);
+			strftime(dateString, sizeof(dateString), "%B %erd, %Y", tm);
 			break;
 		default :
-			string_format_time(dateString, sizeof(dateString), "%B %eth, %Y", tm);
+			strftime(dateString, sizeof(dateString), "%B %eth, %Y", tm);
 			break;
 	}
-	string_format_time(dayString, sizeof(dayString), "%A", tm);
+	strftime(dayString, sizeof(dayString), "%A", tm);
 	dateString[0] = tolower((int)dateString[0]);
 	dayString[0] = tolower((int)dayString[0]);
-	text_layer_set_text(&date, dateString);
-	text_layer_set_text(&day, dayString);
+	text_layer_set_text(date, dateString);
+	text_layer_set_text(day, dayString);
 }
 
 // Animation handler
 void animationStoppedHandler(struct Animation *animation, bool finished, void *context)
 {
-	TextLayer *current = (TextLayer *)context;
-	GRect rect = layer_get_frame(&current->layer);
+	Layer *current = (Layer *)context;
+	GRect rect = layer_get_frame(current);
 	rect.origin.x = 144;
-	layer_set_frame(&current->layer, rect);
+	layer_set_frame(current, rect);
 }
 
 // Animate line
 void makeAnimationsForLayers(Line *line, TextLayer *current, TextLayer *next)
 {
-	GRect rect = layer_get_frame(&next->layer);
+	GRect rect = layer_get_frame((Layer*)next);
 	rect.origin.x -= 144;
+
+  destroy_property_animation(&(line->nextAnimation));
 	
-	property_animation_init_layer_frame(&line->nextAnimation, &next->layer, NULL, &rect);
-	animation_set_duration(&line->nextAnimation.animation, 400);
-	animation_set_curve(&line->nextAnimation.animation, AnimationCurveEaseOut);
-	animation_schedule(&line->nextAnimation.animation);
+	line->nextAnimation = property_animation_create_layer_frame((Layer*)next, NULL, &rect);
+	animation_set_duration((Animation*)line->nextAnimation, 400);
+	animation_set_curve((Animation*)line->nextAnimation, AnimationCurveEaseOut);
+	animation_schedule((Animation*)line->nextAnimation);
 	
-	GRect rect2 = layer_get_frame(&current->layer);
+	GRect rect2 = layer_get_frame((Layer*)current);
 	rect2.origin.x -= 144;
+
+  destroy_property_animation(&(line->nextAnimation));
 	
-	property_animation_init_layer_frame(&line->currentAnimation, &current->layer, NULL, &rect2);
-	animation_set_duration(&line->currentAnimation.animation, 400);
-	animation_set_curve(&line->currentAnimation.animation, AnimationCurveEaseOut);
+	line->nextAnimation = property_animation_create_layer_frame((Layer*)current, NULL, &rect2);
+	animation_set_duration((Animation*)line->currentAnimation, 400);
+	animation_set_curve((Animation*)line->currentAnimation, AnimationCurveEaseOut);
 	
-	animation_set_handlers(&line->currentAnimation.animation, (AnimationHandlers) {
+	animation_set_handlers((Animation*)line->currentAnimation, (AnimationHandlers) {
 		.stopped = (AnimationStoppedHandler)animationStoppedHandler
 	}, current);
 	
-	animation_schedule(&line->currentAnimation.animation);
+	animation_schedule((Animation*)line->currentAnimation);
 }
 
 // Update line
@@ -112,12 +111,12 @@ void updateLineTo(Line *line, char lineStr[2][BUFFER_SIZE], char *value)
 {
 	TextLayer *next, *current;
 	
-	GRect rect = layer_get_frame(&line->currentLayer.layer);
-	current = (rect.origin.x == 0) ? &line->currentLayer : &line->nextLayer;
-	next = (current == &line->currentLayer) ? &line->nextLayer : &line->currentLayer;
+	GRect rect = layer_get_frame((Layer*)line->currentLayer);
+	current = (rect.origin.x == 0) ? line->currentLayer : line->nextLayer;
+	next = (current == line->currentLayer) ? line->nextLayer : line->currentLayer;
 	
 	// Update correct text only
-	if (current == &line->currentLayer) {
+	if (current == line->currentLayer) {
 		memset(lineStr[1], 0, BUFFER_SIZE);
 		memcpy(lineStr[1], value, strlen(value));
 		text_layer_set_text(next, lineStr[1]);
@@ -134,7 +133,7 @@ void updateLineTo(Line *line, char lineStr[2][BUFFER_SIZE], char *value)
 bool needToUpdateLine(Line *line, char lineStr[2][BUFFER_SIZE], char *nextValue)
 {
 	char *currentStr;
-	GRect rect = layer_get_frame(&line->currentLayer.layer);
+	GRect rect = layer_get_frame((Layer*)line->currentLayer);
 	currentStr = (rect.origin.x == 0) ? lineStr[0] : lineStr[1];
 
 	if (memcmp(currentStr, nextValue, strlen(nextValue)) != 0 ||
@@ -145,7 +144,7 @@ bool needToUpdateLine(Line *line, char lineStr[2][BUFFER_SIZE], char *nextValue)
 }
 
 // Update screen based on new time
-void display_time(PblTm *t)
+void display_time(struct tm *t)
 {
 	// The current time text will be stored in the following 3 strings
 	char textLine1[BUFFER_SIZE];
@@ -166,13 +165,13 @@ void display_time(PblTm *t)
 }
 
 // Update screen without animation first time we start the watchface
-void display_initial_time(PblTm *t)
+void display_initial_time(struct tm *t)
 {
 	time_to_3words(t->tm_hour, t->tm_min, line1Str[0], line2Str[0], line3Str[0], BUFFER_SIZE);
 	
-	text_layer_set_text(&line1.currentLayer, line1Str[0]);
-	text_layer_set_text(&line2.currentLayer, line2Str[0]);
-	text_layer_set_text(&line3.currentLayer, line3Str[0]);
+	text_layer_set_text(line1.currentLayer, line1Str[0]);
+	text_layer_set_text(line2.currentLayer, line2Str[0]);
+	text_layer_set_text(line3.currentLayer, line3Str[0]);
 	setDate(t);
 }
 
@@ -180,7 +179,7 @@ void display_initial_time(PblTm *t)
 // Configure the first line of text
 void configureBoldLayer(TextLayer *textlayer)
 {
-	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_BOLD));
+	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
 	text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
@@ -189,136 +188,101 @@ void configureBoldLayer(TextLayer *textlayer)
 // Configure for the 2nd and 3rd lines
 void configureLightLayer(TextLayer *textlayer)
 {
-	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_LIGHT));
+	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
 	text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
 }
 
-/** 
- * Debug methods. For quickly debugging enable debug macro on top to transform the watchface into
- * a standard app and you will be able to change the time with the up and down buttons
- */ 
-#if DEBUG
+void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed);
 
-void up_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
-	(void)recognizer;
-	(void)window;
-	
-	t.tm_min += 1;
-	if (t.tm_min >= 60) {
-		t.tm_min = 0;
-		t.tm_hour += 1;
-		
-		if (t.tm_hour >= 24) {
-			t.tm_hour = 0;
-		}
-	}
-	display_time(&t);
-}
+void init() {
 
+	window = window_create();
+	window_stack_push(window, true);
+	window_set_background_color(window, GColorBlack);
 
-void down_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
-	(void)recognizer;
-	(void)window;
-	
-	t.tm_min -= 1;
-	if (t.tm_min < 0) {
-		t.tm_min = 59;
-		t.tm_hour -= 1;
-	}
-	display_time(&t);
-}
-
-void click_config_provider(ClickConfig **config, Window *window) {
-  (void)window;
-
-  config[BUTTON_ID_UP]->click.handler = (ClickHandler) up_single_click_handler;
-  config[BUTTON_ID_UP]->click.repeat_interval_ms = 100;
-
-  config[BUTTON_ID_DOWN]->click.handler = (ClickHandler) down_single_click_handler;
-  config[BUTTON_ID_DOWN]->click.repeat_interval_ms = 100;
-}
-
-#endif
-
-void handle_init(AppContextRef ctx) {
-  	(void)ctx;
-
-	window_init(&window, "TextWatch");
-	window_stack_push(&window, true);
-	window_set_background_color(&window, GColorBlack);
-
-	// Init resources
-	resource_init_current_app(&APP_RESOURCES);
-	
 	// 1st line layers
-	text_layer_init(&line1.currentLayer, GRect(0, 10, 144, 50));
-	text_layer_init(&line1.nextLayer, GRect(144, 10, 144, 50));
-	configureBoldLayer(&line1.currentLayer);
-	configureBoldLayer(&line1.nextLayer);
+	line1.currentLayer = text_layer_create(GRect(0, 10, 144, 50));
+	line1.nextLayer = text_layer_create(GRect(144, 10, 144, 50));
+	configureBoldLayer(line1.currentLayer);
+	configureBoldLayer(line1.nextLayer);
 
 	// 2nd layers
-	text_layer_init(&line2.currentLayer, GRect(0, 47, 144, 50));
-	text_layer_init(&line2.nextLayer, GRect(144, 47, 144, 50));
-	configureLightLayer(&line2.currentLayer);
-	configureLightLayer(&line2.nextLayer);
+	line2.currentLayer = text_layer_create(GRect(0, 47, 144, 50));
+	line2.nextLayer = text_layer_create(GRect(144, 47, 144, 50));
+	configureLightLayer(line2.currentLayer);
+	configureLightLayer(line2.nextLayer);
 
 	// 3rd layers
-	text_layer_init(&line3.currentLayer, GRect(0, 84, 144, 50));
-	text_layer_init(&line3.nextLayer, GRect(144, 84, 144, 50));
-	configureLightLayer(&line3.currentLayer);
-	configureLightLayer(&line3.nextLayer);
+	line3.currentLayer = text_layer_create(GRect(0, 84, 144, 50));
+	line3.nextLayer = text_layer_create(GRect(144, 84, 144, 50));
+	configureLightLayer(line3.currentLayer);
+	configureLightLayer(line3.nextLayer);
 	
 	//date & day layers
-	text_layer_init(&date, GRect(0, 150, 144, 168-150));
-    text_layer_set_text_color(&date, GColorWhite);
-    text_layer_set_background_color(&date, GColorClear);
-    text_layer_set_font(&date, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-    text_layer_set_text_alignment(&date, GTextAlignmentRight);
-	text_layer_init(&day, GRect(0, 135, 144, 168-135));
-    text_layer_set_text_color(&day, GColorWhite);
-    text_layer_set_background_color(&day, GColorClear);
-    text_layer_set_font(&day, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-    text_layer_set_text_alignment(&day, GTextAlignmentRight);
+	date = text_layer_create(GRect(0, 150, 144, 168-150));
+    text_layer_set_text_color(date, GColorWhite);
+    text_layer_set_background_color(date, GColorClear);
+    text_layer_set_font(date, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text_alignment(date, GTextAlignmentRight);
+	day = text_layer_create(GRect(0, 135, 144, 168-135));
+    text_layer_set_text_color(day, GColorWhite);
+    text_layer_set_background_color(day, GColorClear);
+    text_layer_set_font(day, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+    text_layer_set_text_alignment(day, GTextAlignmentRight);
 
 	// Configure time on init
-	get_time(&t);
-	display_initial_time(&t);
+  time_t now = time(NULL);
+	display_initial_time(localtime(&now));
 	
 	// Load layers
-  	layer_add_child(&window.layer, &line1.currentLayer.layer);
-	layer_add_child(&window.layer, &line1.nextLayer.layer);
-	layer_add_child(&window.layer, &line2.currentLayer.layer);
-	layer_add_child(&window.layer, &line2.nextLayer.layer);
-	layer_add_child(&window.layer, &line3.currentLayer.layer);
-	layer_add_child(&window.layer, &line3.nextLayer.layer);
-	layer_add_child(&window.layer, &date.layer);
-	layer_add_child(&window.layer, &day.layer);
+  Layer *window_layer = window_get_root_layer(window);
+  layer_add_child(window_layer, (Layer*)line1.currentLayer);
+	layer_add_child(window_layer, (Layer*)line1.nextLayer);
+	layer_add_child(window_layer, (Layer*)line2.currentLayer);
+	layer_add_child(window_layer, (Layer*)line2.nextLayer);
+	layer_add_child(window_layer, (Layer*)line3.currentLayer);
+	layer_add_child(window_layer, (Layer*)line3.nextLayer);
+	layer_add_child(window_layer, (Layer*)date);
+	layer_add_child(window_layer, (Layer*)day);
 	
-#if DEBUG
-	// Button functionality
-	window_set_click_config_provider(&window, (ClickConfigProvider) click_config_provider);
-#endif
+}
+
+void deinit() {
+
+  layer_destroy((Layer*)line1.currentLayer);
+  layer_destroy((Layer*)line1.nextLayer);
+  layer_destroy((Layer*)line2.currentLayer);
+  layer_destroy((Layer*)line2.nextLayer);
+  layer_destroy((Layer*)line3.currentLayer);
+  layer_destroy((Layer*)line3.nextLayer);
+
+  destroy_property_animation(&line1.currentAnimation);
+  destroy_property_animation(&line1.nextAnimation);
+  destroy_property_animation(&line2.currentAnimation);
+  destroy_property_animation(&line2.nextAnimation);
+  destroy_property_animation(&line3.currentAnimation);
+  destroy_property_animation(&line3.nextAnimation);
+  
+  layer_destroy((Layer*)date);
+  layer_destroy((Layer*)day);
+
+  window_destroy(window);
 }
 
 // Time handler called every minute by the system
-void handle_minute_tick(AppContextRef ctx, PebbleTickEvent *t) {
-  (void)ctx;
-
-  display_time(t->tick_time);
-  if (t->units_changed & DAY_UNIT) {
-    setDate(t->tick_time);
+void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+  display_time(tick_time);
+  if (units_changed & DAY_UNIT) {
+    setDate(tick_time);
   }
 }
 
-void pbl_main(void *params) {
-  PebbleAppHandlers handlers = {
-    .init_handler = &handle_init,
-	.tick_info = {
-		      .tick_handler = &handle_minute_tick,
-		      .tick_units = MINUTE_UNIT
-		    }
-  };
-  app_event_loop(params, &handlers);
+int main(void) {
+
+  init();
+  app_event_loop();
+  deinit();
+
 }

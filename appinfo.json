@@ -1,0 +1,22 @@
+{
+  "uuid": "4a6e04ad-132a-48ab-b165-7ff4a99872d3",
+  "shortName": "Text Watch With Date",
+  "longName": "Text Watch With Date",
+  "companyName": "Saracco",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {},
+  "resources": {
+    "media": [
+      {
+        "menuIcon": true,
+        "type": "png",
+        "name": "IMAGE_MENU_ICON",
+        "file": "images/menu_icon.png"
+      }
+    ]
+  }
+}
