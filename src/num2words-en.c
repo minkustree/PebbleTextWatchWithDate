@@ -28,7 +28,11 @@ static const char* const TEENS[] ={
 };
 
 static const char* const TENS[] = {
+  #if INCLUDE_OH
+  "oh",
+  #else
   "",
+  #endif
   "ten",
   "twenty",
   "thirty",
@@ -40,17 +44,17 @@ static const char* const TENS[] = {
   "ninety"
 };
 
-static size_t append_number(char* words, int num) {
+static size_t append_number(char* words, int num, short isOh) {
   int tens_val = num / 10 % 10;
   int ones_val = num % 10;
 
   size_t len = 0;
 
-  if (tens_val > 0) {
-    if (tens_val == 1 && num != 10) {
-      strcat(words, TEENS[ones_val]);
-      return strlen(TEENS[ones_val]);
-    }
+  if (tens_val == 1 && num != 10) {
+    strcat(words, TEENS[ones_val]);
+    return strlen(TEENS[ones_val]);
+  }
+  if(!INCLUDE_OH || ((num != 0) && ((tens_val != 0) || isOh))) {
     strcat(words, TENS[tens_val]);
     len += strlen(TENS[tens_val]);
     if (ones_val > 0) {
@@ -82,11 +86,11 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
   if (hours == 0 || hours == 12) {
     remaining -= append_string(words, remaining, TEENS[2]);
   } else {
-    remaining -= append_number(words, hours % 12);
+    remaining -= append_number(words, hours % 12, 0);
   }
 
   remaining -= append_string(words, remaining, " ");
-  remaining -= append_number(words, minutes);
+  remaining -= append_number(words, minutes, 1);
   remaining -= append_string(words, remaining, " ");
 }
 
@@ -121,5 +125,13 @@ void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line
 			pch[0] = 0;
 		}
 	}
-    
+
+  #if INCLUDE_O
+  if(minutes > 0 && minutes < 10) {
+    char new_line2[8] = "o'";
+    strcat(new_line2, line2);
+    memcpy(line2, new_line2, strlen(new_line2)+1);
+  }
+  #endif
+
 }
