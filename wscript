@@ -12,8 +12,8 @@ def options(ctx):
 
 def configure(ctx):
     ctx.load('pebble_sdk')
-    ctx.define('INCLUDE_O', 1)
-    ctx.define('INCLUDE_OH', 0)
+    ctx.define('INCLUDE_O', 0)
+    ctx.define('INCLUDE_OH', 1)
 
 def build(ctx):
     ctx.load('pebble_sdk')
