@@ -1,4 +1,3 @@
-
 #
 # This file is the default set of rules to compile a Pebble project.
 #
@@ -13,7 +12,7 @@ def options(ctx):
 
 def configure(ctx):
     ctx.load('pebble_sdk')
-    ctx.define('INCLUDE_O', 0)
+    ctx.define('INCLUDE_O', 1)
     ctx.define('INCLUDE_OH', 0)
 
 def build(ctx):
