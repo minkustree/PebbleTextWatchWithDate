@@ -14,7 +14,7 @@ def configure(ctx):
     ctx.load('pebble_sdk')
     ctx.define('INCLUDE_O', 0)
     ctx.define('INCLUDE_OH', 0)
-    ctx.define('INVERT', 0)
+    ctx.define('INVERT', 1)
 
 def build(ctx):
     ctx.load('pebble_sdk')
