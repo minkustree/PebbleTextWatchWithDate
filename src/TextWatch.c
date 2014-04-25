@@ -47,18 +47,18 @@ void setDate(struct tm *tm)
     case 1 :
     case 21 :
     case 31 :
-      strftime(dateString, sizeof(dateString), "%B %est, %Y", tm);
+      strftime(dateString, sizeof(dateString), "%est %B %Y", tm);
       break;
     case 2 :
     case 22 :
-      strftime(dateString, sizeof(dateString), "%B %end, %Y", tm);
+      strftime(dateString, sizeof(dateString), "%end %B %Y", tm);
       break;
     case 3 :
     case 23 :
-      strftime(dateString, sizeof(dateString), "%B %erd, %Y", tm);
+      strftime(dateString, sizeof(dateString), "%erd %B %Y", tm);
       break;
     default :
-      strftime(dateString, sizeof(dateString), "%B %eth, %Y", tm);
+      strftime(dateString, sizeof(dateString), "%eth %B %Y", tm);
       break;
   }
   strftime(dayString, sizeof(dayString), "%A", tm);
