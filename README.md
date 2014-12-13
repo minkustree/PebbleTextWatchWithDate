@@ -1,4 +1,4 @@
-Pebble Text Watch With UK Date
+Pebble Text Watch with UK-style (Day-Month-Year) date
 =================
 
 A tweak on the Text Watch. Watch face now reads full date (in UK Day-Month-Year form) in a small font in the bottom right corner. Can be configured to add "o'" or "oh" to minutes one through nine or inverted.

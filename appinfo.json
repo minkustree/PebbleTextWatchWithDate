@@ -1,10 +1,10 @@
 {
   "uuid": "c812d00d-6c4f-4bd1-8d7b-571f6e482c53",
-  "shortName": "Text Watch With UK Date",
-  "longName": "Text Watch With UK Date",
+  "shortName": "Text Watch with DMY date",
+  "longName": "Text Watch with UK-style (Day-Month-Year) date",
   "companyName": "Andy Clark",
-  "versionCode": 1,
-  "versionLabel": "1.0.0",
+  "versionCode": 1, 
+  "versionLabel": "1.0",
   "watchapp": {
     "watchface": true
   },
