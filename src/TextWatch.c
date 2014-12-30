@@ -157,7 +157,11 @@ void display_time(struct tm *t)
   char textLine2[BUFFER_SIZE];
   char textLine3[BUFFER_SIZE];
 
+#if DEBUG
+  time_to_3words(t->tm_hour, t->tm_sec, textLine1, textLine2, textLine3, BUFFER_SIZE, o_setting);
+#else
   time_to_3words(t->tm_hour, t->tm_min, textLine1, textLine2, textLine3, BUFFER_SIZE, o_setting);
+#endif
 
   if (needToUpdateLine(&line1, line1Str, textLine1)) {
     updateLineTo(&line1, line1Str, textLine1);
@@ -252,7 +256,11 @@ void init() {
   layer_add_child(window_layer, (Layer*)date);
   layer_add_child(window_layer, (Layer*)day);
 
+#if DEBUG
+  tick_timer_service_subscribe(SECOND_UNIT, handle_minute_tick);
+#else 
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+#endif
 }
 
 void deinit() {
