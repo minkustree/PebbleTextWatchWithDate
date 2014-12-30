@@ -26,7 +26,8 @@ static char line1Str[2][BUFFER_SIZE];
 static char line2Str[2][BUFFER_SIZE];
 static char line3Str[2][BUFFER_SIZE];
 
-o_setting_t o_setting = O_SETTING_LEADING_O;
+static o_setting_t o_setting = O_SETTING_LEADING_O;
+static int invert_setting = 0;
 
 static void destroy_property_animation(PropertyAnimation **prop_animation) {
   if (*prop_animation == NULL) {
@@ -180,12 +181,11 @@ void display_initial_time(struct tm *t)
   setDate(t);
 }
 
-  #if INVERT
 // Configure the first line of text
 void configureBoldLayer(TextLayer *textlayer)
 {
   text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
-  text_layer_set_text_color(textlayer, GColorBlack);
+  text_layer_set_text_color(textlayer, invert_setting ? GColorBlack : GColorWhite);
   text_layer_set_background_color(textlayer, GColorClear);
   text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
 }
@@ -194,7 +194,7 @@ void configureBoldLayer(TextLayer *textlayer)
 void configureLightLayer(TextLayer *textlayer)
 {
   text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT));
-  text_layer_set_text_color(textlayer, GColorBlack);
+  text_layer_set_text_color(textlayer, invert_setting ? GColorBlack : GColorWhite);
   text_layer_set_background_color(textlayer, GColorClear);
   text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
 }
@@ -205,37 +205,8 @@ void init() {
 
   window = window_create();
   window_stack_push(window, true);
-  window_set_background_color(window, GColorWhite);
+  window_set_background_color(window, invert_setting ? GColorWhite : GColorBlack);
   
-  #else
-// Configure the first line of text
-void configureBoldLayer(TextLayer *textlayer)
-{
-  text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
-  text_layer_set_text_color(textlayer, GColorWhite);
-  text_layer_set_background_color(textlayer, GColorClear);
-  text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
-}
-
-// Configure for the 2nd and 3rd lines
-void configureLightLayer(TextLayer *textlayer)
-{
-  text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT));
-  text_layer_set_text_color(textlayer, GColorWhite);
-  text_layer_set_background_color(textlayer, GColorClear);
-  text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
-}
-
-void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed);
-
-void init() {
-
-  window = window_create();
-  window_stack_push(window, true);
-  window_set_background_color(window, GColorBlack);
-  
-  #endif
-
   // 1st line layers
   line1.currentLayer = text_layer_create(GRect(0, 10, 144, 50));
   line1.nextLayer = text_layer_create(GRect(144, 10, 144, 50));
@@ -254,31 +225,17 @@ void init() {
   configureLightLayer(line3.currentLayer);
   configureLightLayer(line3.nextLayer);
 
-  #if INVERT
   //date & day layers
   date = text_layer_create(GRect(0, 150, 144, 168-150));
-  text_layer_set_text_color(date, GColorBlack);
+  text_layer_set_text_color(date, invert_setting ? GColorBlack : GColorWhite);
   text_layer_set_background_color(date, GColorClear);
   text_layer_set_font(date, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   text_layer_set_text_alignment(date, GTextAlignmentRight);
   day = text_layer_create(GRect(0, 135, 144, 168-135));
-  text_layer_set_text_color(day, GColorBlack);
+  text_layer_set_text_color(day, invert_setting ? GColorBlack : GColorWhite);
   text_layer_set_background_color(day, GColorClear);
   text_layer_set_font(day, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
   text_layer_set_text_alignment(day, GTextAlignmentRight);
-  #else
-  //date & day layers
-  date = text_layer_create(GRect(0, 150, 144, 168-150));
-  text_layer_set_text_color(date, GColorWhite);
-  text_layer_set_background_color(date, GColorClear);
-  text_layer_set_font(date, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-  text_layer_set_text_alignment(date, GTextAlignmentRight);
-  day = text_layer_create(GRect(0, 135, 144, 168-135));
-  text_layer_set_text_color(day, GColorWhite);
-  text_layer_set_background_color(day, GColorClear);
-  text_layer_set_font(day, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text_alignment(day, GTextAlignmentRight);
-  #endif
 
   // Configure time on init
   time_t now = time(NULL);
