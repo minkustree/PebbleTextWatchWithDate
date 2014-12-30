@@ -47,7 +47,7 @@ static size_t append_number(char* words, int num, o_setting_t o_setting) {
 
   size_t len = 0;
 
-  if (tens_val > 1) { // Handle the tens part
+  if (tens_val > 0) { // Handle the tens part
     // 11-19 can be dealt with straight away
     if (tens_val == 1 && num != 10) {
       strcat(words, TEENS[ones_val]);
