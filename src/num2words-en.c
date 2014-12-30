@@ -29,11 +29,7 @@ static const char* const TEENS[] ={
 };
 
 static const char* const TENS[] = {
-//   #if INCLUDE_OH
-//   "oh",
-//   #else
   "",
-//   #endif
   "ten",
   "twenty",
   "thirty",
@@ -46,7 +42,6 @@ static const char* const TENS[] = {
 };
 
 static size_t append_number(char* words, int num, o_setting_t o_setting) {
-  // isOh is true if we should add a leading "o'" or "oh " to the numbers 1 -9
   int tens_val = num / 10 % 10;
   int ones_val = num % 10;
 
@@ -102,7 +97,6 @@ static size_t append_string(char* buffer, const size_t length, const char* str) 
 
 
 void time_to_words(int hours, int minutes, char* words, size_t length, o_setting_t o_setting) {
-
   size_t remaining = length;
   memset(words, 0, length);
 
@@ -117,42 +111,35 @@ void time_to_words(int hours, int minutes, char* words, size_t length, o_setting
   remaining -= append_string(words, remaining, " ");
 }
 
-void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line3, size_t length, o_setting_t o_setting)
-{
-	char value[length];
-	time_to_words(hours, minutes, value, length, o_setting);
-	
-	memset(line1, 0, length);
-	memset(line2, 0, length);
-	memset(line3, 0, length);
-	
-	char *start = value;
-	char *pch = strstr (start, " ");
-	while (pch != NULL) {
-		if (line1[0] == 0) {
-			memcpy(line1, start, pch-start);
-		}  else if (line2[0] == 0) {
-			memcpy(line2, start, pch-start);
-		} else if (line3[0] == 0) {
-			memcpy(line3, start, pch-start);
-		}
-		start += pch-start+1;
-		pch = strstr(start, " ");
-	}
-	
-	// Truncate long teen values, except thirteen
-	if (strlen(line2) > 7 && minutes != 13) {
-		char *pch = strstr(line2, "teen");
-		if (pch) {
-			memcpy(line3, pch, 4);
-			pch[0] = 0;
-		}
-	}
-
-//   if(minutes > 0 && minutes < 10) {
-//     char new_line2[8] = "o'";
-//     strcat(new_line2, line2);
-//     memcpy(line2, new_line2, strlen(new_line2)+1);
-//   }
+void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line3, size_t length, o_setting_t o_setting) {
+  char value[length];
+  time_to_words(hours, minutes, value, length, o_setting);
+  
+  memset(line1, 0, length);
+  memset(line2, 0, length);
+  memset(line3, 0, length);
+  
+  char *start = value;
+  char *pch = strstr (start, " ");
+  while (pch != NULL) {
+    if (line1[0] == 0) {
+      memcpy(line1, start, pch-start);
+    }  else if (line2[0] == 0) {
+      memcpy(line2, start, pch-start);
+    } else if (line3[0] == 0) {
+      memcpy(line3, start, pch-start);
+    }
+    start += pch-start+1;
+    pch = strstr(start, " ");
+  }
+  
+  // Truncate long teen values, except thirteen
+  if (strlen(line2) > 7 && minutes != 13) {
+    char *pch = strstr(line2, "teen");
+    if (pch) {
+      memcpy(line3, pch, 4);
+      pch[0] = 0;
+    }
+  }
 
 }
