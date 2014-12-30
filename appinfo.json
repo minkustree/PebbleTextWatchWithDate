@@ -1,22 +1,26 @@
 {
-  "uuid": "c812d00d-6c4f-4bd1-8d7b-571f6e482c53",
-  "shortName": "Text Watch DMY date",
-  "longName": "Text Watch with UK-style (DMY) date",
-  "companyName": "Andy Clark",
-  "versionCode": 1, 
-  "versionLabel": "1.0",
-  "watchapp": {
-    "watchface": true
-  },
-  "appKeys": {},
-  "resources": {
-    "media": [
-      {
-        "menuIcon": true,
-        "type": "png",
-        "name": "IMAGE_MENU_ICON",
-        "file": "images/menu_icon.png"
-      }
-    ]
-  }
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "Andy Clark",
+    "longName": "Text Watch with UK-style (DMY) date",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/menu_icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_ICON",
+                "type": "png"
+            }
+        ]
+    },
+    "shortName": "Text Watch DMY date",
+    "uuid": "c812d00d-6c4f-4bd1-8d7b-571f6e482c53",
+    "versionCode": 1,
+    "versionLabel": "1.1",
+    "watchapp": {
+        "watchface": true
+    }
 }

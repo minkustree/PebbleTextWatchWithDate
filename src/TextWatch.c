@@ -1,6 +1,8 @@
-#include <Pebble.h>
+#include <pebble.h>
 #include <ctype.h>
+#include "TextWatch.h"
 #include "num2words-en.h"
+
 
 #define DEBUG 0
 #define BUFFER_SIZE 44
@@ -23,6 +25,8 @@ TextLayer *day;
 static char line1Str[2][BUFFER_SIZE];
 static char line2Str[2][BUFFER_SIZE];
 static char line3Str[2][BUFFER_SIZE];
+
+o_setting_t o_setting = O_SETTING_LEADING_O;
 
 static void destroy_property_animation(PropertyAnimation **prop_animation) {
   if (*prop_animation == NULL) {
@@ -152,7 +156,7 @@ void display_time(struct tm *t)
   char textLine2[BUFFER_SIZE];
   char textLine3[BUFFER_SIZE];
 
-  time_to_3words(t->tm_hour, t->tm_min, textLine1, textLine2, textLine3, BUFFER_SIZE);
+  time_to_3words(t->tm_hour, t->tm_min, textLine1, textLine2, textLine3, BUFFER_SIZE, o_setting);
 
   if (needToUpdateLine(&line1, line1Str, textLine1)) {
     updateLineTo(&line1, line1Str, textLine1);
@@ -168,7 +172,7 @@ void display_time(struct tm *t)
 // Update screen without animation first time we start the watchface
 void display_initial_time(struct tm *t)
 {
-  time_to_3words(t->tm_hour, t->tm_min, line1Str[0], line2Str[0], line3Str[0], BUFFER_SIZE);
+  time_to_3words(t->tm_hour, t->tm_min, line1Str[0], line2Str[0], line3Str[0], BUFFER_SIZE, o_setting);
 
   text_layer_set_text(line1.currentLayer, line1Str[0]);
   text_layer_set_text(line2.currentLayer, line2Str[0]);
